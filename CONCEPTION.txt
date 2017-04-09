@@ -1,0 +1,197 @@
+Conception by Francesco Berla and George Fotiadis.
+
+In this text we want to describe all of our design work for our Project and explain our choices related to it.
+This document is divided in three main sections: changes in the architecture, elements added, elements description.
+The first describes the changes that we made at the base structure and the reasons behind it, 
+the second one lists all the elements that we added from the initial codebase,
+and the last section describes in detail every element added or modified.
+
+CHANGES IN THE ARCHITECTURE
+In our project, we added multiple classes but we changed only one relation from the scheme that it's presented on page 5 of the "enoncé".
+As we will describe in more detail in the section related to our additions to the initial architecture we changed the link between Player and Actor in order to have a more flexible way to manage living actors in the game.
+This direct link has been changed, placing an abstract class Character between Player and Actor.
+
+ELEMENTS ADDED
+In this section, we are going to list and describe briefly the elements added to the initial codebase.
+First, we want to just list all the classes in order to show them clearly.
+The additions are the following:
+game/
+  Characters/
+    Character
+    Mob
+    Fly
+    Frog
+  level/
+    Selection
+    Level2
+    Level3
+    Level4
+    FinalLevel
+  Signals/
+    Signal
+    And
+    Or
+    Not
+    ConstSignal
+  Background
+  Ball
+  Door
+  End
+  Exit
+  Fireball
+  Heart
+  Jumper
+  Key
+  KeyBlue
+  KeyYellow
+  KeyRed
+  KeyGreen
+  Lever
+  Limits
+  Mover
+  Oscillator
+  Overlay
+  Particle
+  Princess
+  Spikes
+  Star
+  Torch
+  Waterball
+  Welcome
+  Win
+  WoodBox
+
+Firstly, we created a directory Characters, this directory stores the super class Character and all of its subclasses.
+The abstract class Character that extends Actor is used to group every "living" actor in the world.
+For this reason, we changed Player in order to extend Character and not Actor.
+Every Character has shared attributes that every "living" actor should have to maintain a logic behavior when in the world and interacting with others.
+Notably, every Character has a position, a velocity, a health value, a value for its maximum health (maxHealth), and a side.
+This last attribute identifies the side of every character in game from a list of three: neutral, allied and enemy.
+The side plays a role in mechanism of damaging others Characters, in particular in the hurt function.
+Player, as mentioned before, has been modified to extend Character and not Actor in order to avoid useless duplicate of code and for obvious logical reasons.
+In this directory, other than the mentioned Character and Player, we inserted an abstract class Mob that is used to model every mob (enemy) and that grants flexibility and practical benefits for the creation of new classes of enemies.
+Deriving from this abstract class we created two classes for mobs: Frog and Fly.
+Both of them have a way of moving around and a way of damaging the player and every other Character of a different Side (attribute that we will discuss in a greater detail in the next section).
+
+Secondly, we created a directory level, that contains the super class Level and all of the levels that extend it.
+The level Selection is the first level to load and it is used to choose the level to play.
+Level2, Level3, Level4 and FinalLevel are the levels that we created. There is also the BasicLevel that serves as Level1.
+They are connected in this order "inside the levels", meaning that if you finish Level2 you spawn in Level3 and in FinalLevel if you end Level4.
+
+The last directory inside the directory game is the Signal one.
+It contains the Interface Signal and all of the utils to work with them (the logical operators and the constant value).
+
+Background is an Actor used for drawing the background (an actor with low priority and with a box that follows the player).
+
+Ball is a super class for all of the projectiles that the player can shot, it grants flexibility for more implementations and for use in the Player.
+From this class we created two that extends it: Fireball and Waterball, the first with a sprite and a damage of fire and the second of water.
+
+Another addition is the creation of the class Door that creates a solid block and that can be eliminated (unregistered) with a Signal.
+
+The class End is in charge to draw the “ over screen” and to interact with the player for starting a new game.
+
+Exit is used to change level.
+
+Heart is an actor that hurt the Characters with a Damage of type HEAL that gives a life if done to a Player.
+
+Jumper is the actor in charge of pushing the player into the air when it falls over it.
+
+Key is the abstract class that models a key, the interaction of the player with it make it disappear and activate it's signal in order to open Doors or others.
+From it we created 4 subclasses that are simple implementations of Key with different sprite colors.
+
+The class Lever is an implementation of a Lever used as a Signal that is activated with an interaction with the player and that restore its initial value after a defined cooldown.
+
+Limits is an Actor that instantly kills the Player if they collide, it's used as a limit of the environment where the Player can go, notably in the levels in the air.
+
+Mover is a block that moves based on a signal from a position A to a position B and vice versa.
+
+The class Oscillator is a special actor that changes Signal regularly and it's used especially for movers in order to keep them moving from the starting position to the final one and vice versa.
+
+Overlay is the class used to draw an overlay above the Player that show the ratio of lives based on the maximal value. In our design the "normal" Player has 5 lives and therefore 5 hearts are displayed and therefore the ratio result clear (every heart is one life).
+
+Particle is used to create "animations".
+It has a duration for its effect and modifiers in order to make it flexible and more powerful.
+
+Princess is a "symbolic" actor that represents a princess that we save when we complete the game. Its only function is to launch the winning screen (Win class) when colliding with the Player.
+
+The class Spikes represents an object that makes damage when touched. In our design it does damage primarily if a Character falls over but also when it goes through, the only difference is the amount that is double when it's from a fall.
+
+Star is an object that the Player "collects" to activate its signal and that has nice animations when taken. Stars are used to open the doors (class Exit).
+
+A Torch is an aesthetic object that acts as a signal and that reacts to damage: fire makes it burn and water turns it off.
+Its signal is dependent on the state of its flame.
+
+Welcome is the class in charge of greeting the player at the launch of the game.
+It shows a nice image of welcome in multiple languages.
+
+Win, extends End, is a class used to stop the game and present a screen to the user, in this case an image for the victory.
+
+Woodbox is a Block that can be destructed and therefore is used as temporary block and for making the player interact with the world.
+
+DESCRIPTION OF INSERTED AND MODIFIED ELEMENTS
+
+The class Character, as said before, is a used to model a "living" Actor in the world.
+It should interact with the world and with the others actors, and they can modify its attributes.
+
+The class Player has been modified from the proposed design only in the fact that it extends Character and not Actor and a big part of its implementation is written in Character.
+
+The class Mob models the uncontrolled "living" actors in the world and extends Character in order to use the general implementation with the only difference being the Category, a classification of the mob that will influence its "power" (damage done, heal taken and damage received).
+
+The Frog is an implementation of Mob that has a sprite of a frog, inflict physical damage on contact, heal through water damage, it takes void and fire damage (the first one kill it instantly).
+Its movement is based on the direction (LEFT or RIGHT) and on a cooldown.
+The sequence of movement is:
+   -standing still until cooldown is equal or less than zero
+   -jumping in the air (oblique, based on the direction) changing its velocity
+   -letting the gravity do the work to reach the ground
+   -starting a cooldown when the Frog interact with a solid object below it
+   -repeat
+The sprite changes based on the phase of the jump.
+When its life reaches zero it gets unregistered.
+
+Fly is an implementation of Mob but its movement its simpler: it needs an initial velocity (equal to the direction in order to match the sprites) and then it keeps flying in a horizontal line (no gravity effect) until it reaches a solid object and turns around.
+It does damage by contact and takes only fire damage.
+The sprites changes for simulating a flying animal (cooldown as in Torch) and based on the direction.
+
+Constant Signal is an implementation of signal that returns always the signal that takes as argument.
+
+Background is a class that takes a Sprite and draws it in the back of the world (priority set at Integer.MIN_VALUE) in the position of the output box.
+
+Ball models the projectiles and interacts with the other Actors doing 1 unit of damage of the type given as argument.
+It also models the fact that a ball is affected by gravity, bounces to solid objects a limited number of times and then disappears and the fact that when it hurts something it gets unregistered.
+
+Fireball and Waterball are both implementations of Ball that just define the damage in a fixed way in the constructor (a Fireball will always have damage type fire and waterball of type water).
+
+The class Block has been modified just in the constructors: for making the level design easier we added some constructor with others arguments.
+The first additional constructor takes a vector center and a size and make a square block in that position, the second one takes a vector center and a value height and width to make the block with those values.
+
+The class Key has been changed to be abstract keeping all the functionalities of the one described in the pdf, the classes KeyRed, KeyBlue, KeyGreen, KeyYellow are the implementations and they are used only to pass a Sprite of the correct color.
+
+Limits it's our implementation of the last point at page 34 of the pdf.
+It's a medium priority, non-solid actor with a position that inflicts "infinite" (Double.POSITIVE_INFINITY) VOID damage at contact that is supposed to kill instantly the player or every other Actor reacting to VOID damage.
+
+Princess is an actor that does nothing but creates the object Win that shows the winning image.
+It is represented as a pink block and has the same dimensions as the Player, it takes a position as argument to its constructor to be put wherever it is needed.
+
+Simulator has been changed just in the fact that the initial Level next is equal to our level selection and not to BasicLevel.
+
+Spikes have been changed from the pdf in just one way: other than doing 1 physical damage when an actor falls over with a cooldown, they damage an actor that pass through it too. 
+The damage inflicted even when there is no vertical negative y velocity is just half the value of the damage for the fall on them.
+This reduced damage is used also for the contact with positive y velocity.
+
+The class Star is an actor that implements Signal and acts like a Key or a Heart (that gets unregistered when colliding with a player activating its signal) but it adds the use of Particle afterwards.
+In practice, an animation of a ring of star originate from the center of the position where the star was and gets bigger until it disappears.
+
+Torch has been modified in a single way: other than the interaction with fire and air damage, we added that, when hurt by water damage, it stops burning as it does with air damage.
+
+The Welcome class is a simple Actor that shows an image through a Sprite, it has an attribute (taken as argument) duration that sets the duration of the image before unregistering it.
+The screening of the image has an effect of transparency based on the time left on the duration that is used to gently introduce the player to the game.
+
+End is a class that shows a screen when the player loses.
+It has a duration, until then an image is shown, and after this time a new Image is show: it’s the same as before with the writing "Press enter to continue" and the Enter key can be pressed to restart the level Selection.
+The Win class extends End and overrides only the draw method to have another image and eliminate the change after a period of time.
+As for End the image starts with a transparency, calculated on the duration left, that vanishes with time.
+
+Woodbox extends Block and adds the fact that is affected by fire damage.
+This particularity lets it be destructed when hurt by fire damage (notably a fireball thrown by the player) and create a Particle that creates a smoke/destruction effect.
+The smoke effect starts from the center of the box of Woodbox and rapidly increases to a maximum value.
+At maximum dimension, it lasts a bit longer and then disappear.
