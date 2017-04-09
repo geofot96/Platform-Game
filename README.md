@@ -1,4 +1,4 @@
-To lance the game you have to compile and run the Program.java file.
+To launch the game you have to compile and run the Program.java file. In order to work properly I suggest you import all the files to an IDE and compile through there.
 
 The controls used in this game are :
 
